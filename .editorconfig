@@ -1,0 +1,14 @@
+# Visual Studio Code requires installing an extension in
+# order to override its code/wokrspace settings
+
+root = true
+
+[*] # For any type of files
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+
+[*.{c,h}] # For any C files
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
