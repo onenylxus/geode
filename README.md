@@ -6,7 +6,7 @@ Geode is a minimal code editor inspired by [**antirez/kilo**](https://github.com
   - [x] Setup
   - [x] Raw mode
   - [x] Raw input and output
-  - [ ] Text viewer
+  - [x] Text viewer
   - [ ] Text editor
   - [ ] Search
   - [ ] Syntax highlighting
