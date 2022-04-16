@@ -9,9 +9,10 @@ Geode is a minimal code editor inspired by [**antirez/kilo**](https://github.com
   - [x] Text viewer
   - [x] Text editor
   - [x] Search
-  - [ ] Syntax highlighting
+  - [x] Syntax highlighting
 - **Geode editor**
   - [ ] Rewrite status and message bars
+  - [ ] Editor syntax dictionary
   - [ ] Editor themes
   - [ ] ...
 
