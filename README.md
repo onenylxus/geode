@@ -1,2 +1,17 @@
 # Geode
-Minimal code editor
+Geode is a minimal code editor inspired by [**antirez/kilo**](https://github.com/antirez/kilo). The objective of this project is to first complete the process of a basic editor, then extend the editor with more customizable features.
+
+## Progress
+- **Kilo editor**
+  - [x] Setup
+  - [x] Raw mode
+  - [x] Raw input and output
+  - [ ] Text viewer
+  - [ ] Text editor
+  - [ ] Search
+  - [ ] Syntax highlighting
+- **Geode editor**
+  - [ ] ...
+
+## Licensing
+This project is under the [**BSD-2-Clause License**](LICENSE.md) which follows from Kilo editor.
