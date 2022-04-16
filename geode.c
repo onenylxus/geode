@@ -72,7 +72,7 @@ struct abuf {
 
 void setStatusMessage(const char *fmt, ...);
 void refreshScreen();
-char* prompt(char* prompt);
+char* prompt(char* prompt, void (*callback)(char*, int));
 
 //// Terminal ////
 
@@ -186,13 +186,25 @@ int getWindowSize(int* rows, int* cols) {
 //// Row ////
 
 // Convert character index to render index
-int characterToRender(erow *row, int cx) {
+int characterToRender(erow* row, int cx) {
   int rx = 0;
   for (int j = 0; j < cx; j++) {
     if (row->chars[j] == '\t') rx += (TAB_STOP - 1) - (rx % TAB_STOP);
     rx++;
   }
   return rx;
+}
+
+// Convert render index to character index
+int renderToCharacter(erow* row, int rx) {
+  int cur = 0;
+  int cx;
+  for (cx = 0; cx < row->size; cx++) {
+    if (row->chars[cx] == '\t') cur += (TAB_STOP - 1) - (cur % TAB_STOP);
+    cur++;
+    if (cur > rx) return cx;
+  }
+  return cx;
 }
 
 // Update row
@@ -357,7 +369,7 @@ void openFile(char* filename) {
 // Save file
 void saveFile() {
   if (E.filename == NULL) {
-    E.filename = prompt("Save as: %s (Esc to cancel)");
+    E.filename = prompt("Save as: %s (Esc to cancel)", NULL);
     if (E.filename == NULL) {
       setStatusMessage("Save aborted");
       return;
@@ -380,6 +392,66 @@ void saveFile() {
   }
   free(buf);
   setStatusMessage("Cannot save! I/O error: %s", strerror(errno));
+}
+
+//// Find ////
+
+// Find callback
+void findCallback(char* query, int key) {
+  static int lastMatch = -1;
+  static int direction = 1;
+
+  if (key == '\r' || key == '\x1b') {
+    lastMatch = -1;
+    direction = 1;
+    return;
+  } else if (key == ARROW_RIGHT || key == ARROW_DOWN) {
+    direction = 1;
+  } else if (key == ARROW_LEFT || key == ARROW_UP) {
+    direction = -1;
+  } else {
+    lastMatch = -1;
+    direction = 1;
+  }
+
+  if (lastMatch == -1) direction = 1;
+  int current = lastMatch;
+
+  for (int i = 0; i < E.nrows; i++) {
+    current += direction;
+    if (current == -1) {
+      current = E.nrows - 1;
+    } else if (current == E.nrows) {
+      current = 0;
+    }
+    erow* row = &E.row[current];
+    char* match = strstr(row->render, query);
+    if (match) {
+      lastMatch = current;
+      E.cy = current;
+      E.cx = renderToCharacter(row, match - row->render);
+      E.dy = E.nrows;
+      break;
+    }
+  }
+}
+
+// Find query
+void find() {
+  int savedCx = E.cx;
+  int savedCy = E.cy;
+  int savedDx = E.dx;
+  int savedDy = E.dy;
+
+  char* query = prompt("Search: %s (Use Esc/Arrows/Enter)", findCallback);
+  if (query) {
+    free(query);
+  } else {
+    E.cx = savedCx;
+    E.cy = savedCy;
+    E.dx = savedDx;
+    E.dy = savedDy;
+  }
 }
 
 //// Buffer ////
@@ -510,7 +582,7 @@ void setStatusMessage(const char *fmt, ...) {
 //// Input ////
 
 // Prompt user
-char* prompt(char* prompt) {
+char* prompt(char* prompt, void (*callback)(char*, int)) {
   size_t size = 128;
   char* buf = malloc(size);
   size_t len = 0;
@@ -525,10 +597,12 @@ char* prompt(char* prompt) {
       if (len != 0) buf[--len] = '\0';
     } else if (c == '\x1b') {
       setStatusMessage("");
+      if (callback) callback(buf, c);
       free(buf);
       return NULL;
     } else if (c == '\r' && len != 0) {
       setStatusMessage("");
+      if (callback) callback(buf, c);
       return buf;
     } else if (!iscntrl(c) && c < 128) {
       if (len == size - 1) {
@@ -538,6 +612,8 @@ char* prompt(char* prompt) {
       buf[len++] = c;
       buf[len] = '\0';
     }
+
+    if (callback) callback(buf, c);
   }
 }
 
@@ -630,6 +706,11 @@ void processKey() {
       deleteCharacter();
       break;
 
+    // [Ctrl-F] find query
+    case CTRL_KEY('f'):
+      find();
+      break;
+
     // [Ctrl-Q] exit editor
     case CTRL_KEY('q'):
       if (E.dirty && qt > 0) {
@@ -687,7 +768,7 @@ int main(int argc, char* argv[]) {
   enableRawMode();
   setupEditor();
   if (argc >= 2) openFile(argv[1]);
-  setStatusMessage("HELP: Ctrl-Q = quit | Ctrl-S = save");
+  setStatusMessage("HELP: Ctrl-F = find | Ctrl-Q = quit | Ctrl-S = save");
 
   // Iterate loop
   while (1) {
