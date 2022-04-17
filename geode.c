@@ -19,7 +19,7 @@
 
 //// Defines ////
 
-#define VERSION "0.1.0"
+#define VERSION "0.1.1"
 #define TAB_STOP 2
 #define QUIT_CONFIRM 1
 
@@ -104,15 +104,7 @@ char* C_HL_keywords[] = {
 };
 
 struct syntax HLDB[] = {
-  {
-    "c",
-    C_HL_extensions,
-    C_HL_keywords,
-    "//",
-    "/*",
-    "*/",
-    HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
-  },
+  { "c", C_HL_extensions, C_HL_keywords, "//", "/*", "*/", HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS },
 };
 
 #define HLDB_ENTRIES (sizeof(HLDB) / sizeof(HLDB[0]))
@@ -355,6 +347,7 @@ int syntaxToColor(int hl) {
     case HL_MATCH: return 34;
     case HL_STRING: return 35;
     case HL_COMMENT_SINGLE: return 36;
+    case HL_COMMENT_MULTIPLE: return 36;
     default: return 37;
   }
 }
@@ -779,10 +772,16 @@ void drawLayout(struct abuf* ab) {
 
 // Draw status bar
 void drawStatusBar(struct abuf *ab) {
+  time_t now;
+  struct tm* ti;
+  time(&now);
+  ti = localtime(&now);
+
   appendBuffer(ab, "\x1b[7m", 4);
   char status[80], rstatus[80];
   int len = snprintf(status, sizeof(status), "%.20s - %d lines %s", E.filename ? E.filename : "[untitled]", E.nrows, E.dirty ? "(modified)" : "");
-  int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %d/%d", E.syntax ? E.syntax->filetype : "no ft", E.cy + 1, E.nrows);
+  int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %d:%d | %d:%d", E.syntax ? E.syntax->filetype : "*", E.cy + 1, E.cx + 1, ti->tm_hour, ti->tm_min);
+
   if (len > E.cols) len = E.cols;
   appendBuffer(ab, status, len);
   while (len < E.cols) {
