@@ -780,7 +780,7 @@ void drawStatusBar(struct abuf *ab) {
   appendBuffer(ab, "\x1b[7m", 4);
   char status[80], rstatus[80];
   int len = snprintf(status, sizeof(status), "%.20s - %d lines %s", E.filename ? E.filename : "[untitled]", E.nrows, E.dirty ? "(modified)" : "");
-  int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %d:%d | %d:%d", E.syntax ? E.syntax->filetype : "*", E.cy + 1, E.cx + 1, ti->tm_hour, ti->tm_min);
+  int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %d:%d | %02d:%02d", E.syntax ? E.syntax->filetype : "*", E.cy + 1, E.cx + 1, ti->tm_hour, ti->tm_min);
 
   if (len > E.cols) len = E.cols;
   appendBuffer(ab, status, len);
