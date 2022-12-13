@@ -547,6 +547,21 @@ char* stringify(int* len) {
   return buf;
 }
 
+// Display file size
+char* displayFileSize() {
+  int len;
+  stringify(&len);
+
+  double size = len;
+  char* unit = "B";
+  if (size >= 1000) { size /= 1024; unit = "KB"; }
+  if (size >= 1000) { size /= 1024; unit = "MB"; }
+  if (size >= 1000) { size /= 1024; unit = "GB"; }
+  static char str[80];
+  snprintf(str, sizeof(str), len < 1000 ? "%.0f %s" : "%.02f %s", size, unit);
+  return str;
+}
+
 // Open file
 void openFile(char* filename) {
   free(E.filename);
@@ -779,8 +794,8 @@ void drawStatusBar(struct abuf *ab) {
 
   appendBuffer(ab, "\x1b[7m", 4);
   char status[80], rstatus[80];
-  int len = snprintf(status, sizeof(status), "%.20s - %d lines %s", E.filename ? E.filename : "[untitled]", E.nrows, E.dirty ? "(modified)" : "");
-  int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %d:%d | %02d:%02d", E.syntax ? E.syntax->filetype : "*", E.cy + 1, E.cx + 1, ti->tm_hour, ti->tm_min);
+  int len = snprintf(status, sizeof(status), " %.20s - %d lines %s", E.filename ? E.filename : "[untitled]", E.nrows, E.dirty ? "(modified)" : "");
+  int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %s | %d:%d | %02d:%02d ", E.syntax ? E.syntax->filetype : "*", displayFileSize(), E.cy + 1, E.cx + 1, ti->tm_hour, ti->tm_min);
 
   if (len > E.cols) len = E.cols;
   appendBuffer(ab, status, len);
