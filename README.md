@@ -4,7 +4,7 @@ Geode is a minimal code editor inspired by [**antirez/kilo**](https://github.com
 ## Progress
 - **Kilo editor (done)**
 - **Geode editor**
-  - [ ] Rewrite status and message bars
+  - [x] Rewrite status and message bars
   - [ ] Editor syntax dictionary
   - [ ] Editor themes
   - [ ] ...

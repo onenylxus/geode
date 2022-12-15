@@ -47,6 +47,7 @@ enum highlights {
   HL_COMMENT_MULTIPLE,
   HL_KEYWORD_ACTUAL,
   HL_KEYWORD_COMMON,
+  HL_OPERATOR,
   HL_STRING,
   HL_NUMBER,
   HL_MATCH
@@ -58,6 +59,7 @@ struct syntax {
   char* filetype;
   char** match;
   char** keywords;
+  char** operators;
   char* slCommentStart;
   char* mlCommentStart;
   char* mlCommentEnd;
@@ -99,12 +101,18 @@ struct abuf {
 
 char* C_HL_extensions[] = { ".c", ".h", ".cpp", NULL };
 char* C_HL_keywords[] = {
+  "#include", "#pragma", "#define", "#undef", "#ifdef", "#ifndef", "#endif", "#error",
   "switch", "if", "while", "for", "break", "continue", "return", "else", "struct", "union", "typedef", "static", "enum", "class", "case",
   "int|", "long|", "double|", "float|", "char|", "unsigned|", "signed|", "void|", NULL
 };
+char* C_HL_operators[] = {
+  // "<<=", ">>=",
+  // "++", "--", "+=", "-=", "*=", "/=", "%%=", "==", "<=", "<<", ">=", ">>", "!=", "&&", "&=", "||", "|=", "^=", "~=",
+  "+", "-", "*", "/", "%%", "=", "<", ">", "!", "&", "|", "^", "~", NULL
+};
 
 struct syntax HLDB[] = {
-  { "c", C_HL_extensions, C_HL_keywords, "//", "/*", "*/", HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS },
+  { "c", C_HL_extensions, C_HL_keywords, C_HL_operators, "//", "/*", "*/", HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS },
 };
 
 #define HLDB_ENTRIES (sizeof(HLDB) / sizeof(HLDB[0]))
@@ -238,6 +246,7 @@ void updateSyntax(erow* row) {
   if (E.syntax == NULL) return;
 
   char** keywords = E.syntax->keywords;
+  char** operators = E.syntax->operators;
   char* scs = E.syntax->slCommentStart;
   char* mcs = E.syntax->mlCommentStart;
   char* mce = E.syntax->mlCommentEnd;
@@ -329,6 +338,18 @@ void updateSyntax(erow* row) {
       }
     }
 
+    {
+      int j;
+      for (j = 0; operators[j]; j++) {
+        int olen = strlen(operators[j]);
+        if (!strncmp(&row->render[i], operators[j], olen)) {
+          memset(&row->hl[i], HL_OPERATOR, olen);
+          i += olen - 1;
+          break;
+        }
+      }
+    }
+
     prevSep = isSeparator(c);
     i++;
   }
@@ -341,13 +362,14 @@ void updateSyntax(erow* row) {
 // Convert syntax to color
 int syntaxToColor(int hl) {
   switch (hl) {
-    case HL_NUMBER: return 31;
-    case HL_KEYWORD_COMMON: return 32;
-    case HL_KEYWORD_ACTUAL: return 33;
+    case HL_NUMBER: return 33;
+    case HL_KEYWORD_COMMON: return 31;
+    case HL_KEYWORD_ACTUAL: return 35;
+    case HL_OPERATOR: return 36;
     case HL_MATCH: return 34;
-    case HL_STRING: return 35;
-    case HL_COMMENT_SINGLE: return 36;
-    case HL_COMMENT_MULTIPLE: return 36;
+    case HL_STRING: return 32;
+    case HL_COMMENT_SINGLE: return 30;
+    case HL_COMMENT_MULTIPLE: return 30;
     default: return 37;
   }
 }
