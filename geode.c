@@ -106,8 +106,6 @@ char* C_HL_keywords[] = {
   "int|", "long|", "double|", "float|", "char|", "unsigned|", "signed|", "void|", NULL
 };
 char* C_HL_operators[] = {
-  // "<<=", ">>=",
-  // "++", "--", "+=", "-=", "*=", "/=", "%%=", "==", "<=", "<<", ">=", ">>", "!=", "&&", "&=", "||", "|=", "^=", "~=",
   "+", "-", "*", "/", "%%", "=", "<", ">", "!", "&", "|", "^", "~", NULL
 };
 
@@ -156,11 +154,19 @@ void enableRawMode() {
   if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) throw("tcsetattr");
 }
 
+// Get time
+struct tm* getTime() {
+  time_t now;
+  time(&now);
+  return localtime(&now);
+}
+
 // Read key from user input
 int readKey() {
   int nread;
   char c;
   while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
+    if (getTime()->tm_sec == 0) refreshScreen();
     if (nread == -1 && errno != EAGAIN) throw("read");
   }
 
@@ -809,15 +815,12 @@ void drawLayout(struct abuf* ab) {
 
 // Draw status bar
 void drawStatusBar(struct abuf *ab) {
-  time_t now;
-  struct tm* ti;
-  time(&now);
-  ti = localtime(&now);
-
   appendBuffer(ab, "\x1b[7m", 4);
   char status[80], rstatus[80];
+  char* fsize = displayFileSize();
+  struct tm* ti = getTime();
   int len = snprintf(status, sizeof(status), " %.20s - %d lines %s", E.filename ? E.filename : "[untitled]", E.nrows, E.dirty ? "(modified)" : "");
-  int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %s | %d:%d | %02d:%02d ", E.syntax ? E.syntax->filetype : "*", displayFileSize(), E.cy + 1, E.cx + 1, ti->tm_hour, ti->tm_min);
+  int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %s | %d:%d | %02d:%02d ", E.syntax ? E.syntax->filetype : "*", fsize, E.cy + 1, E.cx + 1, ti->tm_hour, ti->tm_min);
 
   if (len > E.cols) len = E.cols;
   appendBuffer(ab, status, len);
@@ -955,7 +958,7 @@ void processKey() {
   int c = readKey();
 
   switch (c) {
-    // [A][D][S][W] move cursor
+    // [←][↑][→][↓] move cursor
     case ARROW_LEFT:
     case ARROW_UP:
     case ARROW_RIGHT:
