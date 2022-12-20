@@ -24,7 +24,7 @@
 #define QUIT_CONFIRM 1
 
 #define CTRL_KEY(key) ((key) & 0x1f)
-#define ABUF_INIT {NULL, 0}
+#define ABUF_INIT { NULL, 0 }
 #define HL_HIGHLIGHT_NUMBERS (1 << 0)
 #define HL_HIGHLIGHT_STRINGS (1 << 1)
 
@@ -87,7 +87,7 @@ struct config {
   int dirty;
   char message[80];
   time_t time;
-  struct syntax *syntax;
+  struct syntax* syntax;
   struct termios origin;
 };
 struct config E;
@@ -106,7 +106,7 @@ char* C_HL_keywords[] = {
   "int|", "long|", "double|", "float|", "char|", "unsigned|", "signed|", "void|", NULL
 };
 char* C_HL_operators[] = {
-  "+", "-", "*", "/", "%%", "=", "<", ">", "!", "&", "|", "^", "~", NULL
+  "+", "-", "*", "/", "%", "=", "<", ">", "!", "&", "|", "^", "~", NULL
 };
 
 struct syntax HLDB[] = {
@@ -117,7 +117,7 @@ struct syntax HLDB[] = {
 
 //// Prototypes ////
 
-void setStatusMessage(const char *fmt, ...);
+void setStatusMessage(const char* fmt, ...);
 void refreshScreen();
 char* prompt(char* prompt, void (*callback)(char*, int));
 
@@ -493,7 +493,7 @@ void deleteRow(int at) {
 }
 
 // Insert character to row
-void rowInsertCharacter(erow *row, int at, int c) {
+void rowInsertCharacter(erow* row, int at, int c) {
   if (at < 0 || at > row->size) at = row->size;
   row->chars = realloc(row->chars, row->size + 2);
   memmove(&row->chars[at + 1], &row->chars[at], ++row->size - at);
@@ -503,7 +503,7 @@ void rowInsertCharacter(erow *row, int at, int c) {
 }
 
 // Append string
-void appendString(erow *row, char *s, size_t len) {
+void appendString(erow* row, char* s, size_t len) {
   row->chars = realloc(row->chars, row->size + len + 1);
   memcpy(&row->chars[row->size], s, len);
   row->size += len;
@@ -513,7 +513,7 @@ void appendString(erow *row, char *s, size_t len) {
 }
 
 // Delete character from row
-void rowDeleteCharacter(erow *row, int at) {
+void rowDeleteCharacter(erow* row, int at) {
   if (at < 0 || at >= row->size) return;
   memmove(&row->chars[at], &row->chars[at + 1], row->size-- - at);
   updateRow(row);
@@ -522,6 +522,7 @@ void rowDeleteCharacter(erow *row, int at) {
 
 //// Editor ////
 void insertCharacter(int c) {
+  if (c == CTRL_KEY(c)) return;
   if (E.cy == E.nrows) insertRow(E.nrows, "", 0);
   rowInsertCharacter(&E.row[E.cy], E.cx++, c);
 }
@@ -596,7 +597,7 @@ void openFile(char* filename) {
   E.filename = strdup(filename);
   selectSyntaxHighlight();
 
-  FILE *fp = fopen(filename, "r");
+  FILE* fp = fopen(filename, "r");
   if (!fp) throw("fopen");
 
   char* line = NULL;
@@ -814,7 +815,7 @@ void drawLayout(struct abuf* ab) {
 }
 
 // Draw status bar
-void drawStatusBar(struct abuf *ab) {
+void drawStatusBar(struct abuf* ab) {
   appendBuffer(ab, "\x1b[7m", 4);
   char status[80], rstatus[80];
   char* fsize = displayFileSize();
@@ -838,7 +839,7 @@ void drawStatusBar(struct abuf *ab) {
 }
 
 // Draw message bar
-void drawMessageBar(struct abuf *ab) {
+void drawMessageBar(struct abuf* ab) {
   appendBuffer(ab, "\x1b[K", 3);
   int len = strlen(E.message);
   if (len > E.cols) len = E.cols;
@@ -866,7 +867,7 @@ void refreshScreen() {
 }
 
 // Set status message
-void setStatusMessage(const char *fmt, ...) {
+void setStatusMessage(const char* fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   vsnprintf(E.message, sizeof(E.message), fmt, ap);
