@@ -34,6 +34,7 @@ enum keys {
   ARROW_UP,
   ARROW_RIGHT,
   ARROW_DOWN,
+  INSERT,
   DELETE,
   HOME,
   END,
@@ -85,6 +86,7 @@ struct config {
   erow* row;
   char* filename;
   int dirty;
+  int insert;
   char message[80];
   time_t time;
   struct syntax* syntax;
@@ -180,6 +182,7 @@ int readKey() {
         if (seq[2] == '~') {
           switch (seq[1]) {
             case '1': return HOME;
+            case '2': return INSERT;
             case '3': return DELETE;
             case '4': return END;
             case '5': return PAGE_UP;
@@ -495,8 +498,10 @@ void deleteRow(int at) {
 // Insert character to row
 void rowInsertCharacter(erow* row, int at, int c) {
   if (at < 0 || at > row->size) at = row->size;
-  row->chars = realloc(row->chars, row->size + 2);
-  memmove(&row->chars[at + 1], &row->chars[at], ++row->size - at);
+  if (E.insert == 0 || at == row->size) {
+    row->chars = realloc(row->chars, row->size + 2);
+    memmove(&row->chars[at + 1], &row->chars[at], ++row->size - at);
+  }
   row->chars[at] = c;
   updateRow(row);
   E.dirty++;
@@ -633,7 +638,7 @@ void saveFile() {
       close(file);
       free(buf);
       E.dirty = 0;
-      setStatusMessage("%d bytes written to disk", len);
+      setStatusMessage("File saved successfully");
       return;
     }
     close(file);
@@ -818,10 +823,13 @@ void drawLayout(struct abuf* ab) {
 void drawStatusBar(struct abuf* ab) {
   appendBuffer(ab, "\x1b[7m", 4);
   char status[80], rstatus[80];
+  char* dirty = E.dirty ? "(modified)" : "";
+  char* ftype = E.syntax ? E.syntax->filetype : "*";
   char* fsize = displayFileSize();
+  char* insert = E.insert ? "SUB" : "INS";
   struct tm* ti = getTime();
-  int len = snprintf(status, sizeof(status), " %.20s - %d lines %s", E.filename ? E.filename : "[untitled]", E.nrows, E.dirty ? "(modified)" : "");
-  int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %s | %d:%d | %02d:%02d ", E.syntax ? E.syntax->filetype : "*", fsize, E.cy + 1, E.cx + 1, ti->tm_hour, ti->tm_min);
+  int len = snprintf(status, sizeof(status), " %.20s - %d lines %s", E.filename ? E.filename : "[untitled]", E.nrows, dirty);
+  int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %s | %d:%d | %s | %02d:%02d ", ftype, fsize, E.cy + 1, E.cx + 1, insert, ti->tm_hour, ti->tm_min);
 
   if (len > E.cols) len = E.cols;
   appendBuffer(ab, status, len);
@@ -994,6 +1002,11 @@ void processKey() {
       insertLine();
       break;
 
+    // Insert mode
+    case INSERT:
+      E.insert = (E.insert + 1) % 2;
+      break;
+
     // Deletions
     case BACKSPACE:
     case CTRL_KEY('h'):
@@ -1051,6 +1064,7 @@ void setupEditor() {
   E.row = NULL;
   E.filename = NULL;
   E.dirty = 0;
+  E.insert = 0;
   E.message[0] = '\0';
   E.time = 0;
   E.syntax = NULL;
@@ -1065,7 +1079,7 @@ int main(int argc, char* argv[]) {
   enableRawMode();
   setupEditor();
   if (argc >= 2) openFile(argv[1]);
-  setStatusMessage("HELP: Ctrl-F = find | Ctrl-Q = quit | Ctrl-S = save");
+  setStatusMessage("HELP: Ctrl-F = find | Ctrl-H = backspace | Ctrl-Q = quit | Ctrl-S = save");
 
   // Iterate loop
   while (1) {
