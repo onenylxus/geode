@@ -85,10 +85,12 @@ struct config {
   int nrows;
   erow* row;
   char* filename;
+  int cursor;
   int dirty;
   int insert;
   char message[80];
-  time_t time;
+  time_t cursorTime;
+  time_t messageTime;
   struct syntax* syntax;
   struct termios origin;
 };
@@ -121,6 +123,7 @@ struct syntax HLDB[] = {
 
 void setStatusMessage(const char* fmt, ...);
 void refreshScreen();
+void refreshConfig();
 char* prompt(char* prompt, void (*callback)(char*, int));
 
 //// Terminal ////
@@ -168,7 +171,7 @@ int readKey() {
   int nread;
   char c;
   while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
-    if (getTime()->tm_sec == 0) refreshScreen();
+    refreshConfig();
     if (nread == -1 && errno != EAGAIN) throw("read");
   }
 
@@ -239,6 +242,13 @@ int getWindowSize(int* rows, int* cols) {
     *rows = ws.ws_row;
     return 0;
   }
+}
+
+// Reset cursor
+void resetCursor() {
+  E.cursor = 1;
+  E.cursorTime = time(NULL);
+  refreshScreen();
 }
 
 //// Highlight ////
@@ -530,6 +540,7 @@ void insertCharacter(int c) {
   if (c == CTRL_KEY(c)) return;
   if (E.cy == E.nrows) insertRow(E.nrows, "", 0);
   rowInsertCharacter(&E.row[E.cy], E.cx++, c);
+  resetCursor();
 }
 
 void insertLine() {
@@ -559,6 +570,7 @@ void deleteCharacter() {
     appendString(&E.row[E.cy - 1], row->chars, row->size);
     deleteRow(E.cy--);
   }
+  resetCursor();
 }
 
 //// File ////
@@ -738,6 +750,16 @@ void freeBuffer(struct abuf* ab) {
 
 //// Output ////
 
+// Refresh config
+void refreshConfig() {
+  if (getTime()->tm_sec == 0) refreshScreen();
+  if (time(NULL) - E.cursorTime > 1) {
+    E.cursor = (E.cursor + 1) % 2;
+    E.cursorTime = time(NULL);
+    refreshScreen();
+  }
+}
+
 // Set editor scroll
 void scroll() {
   E.rx = 0;
@@ -851,7 +873,7 @@ void drawMessageBar(struct abuf* ab) {
   appendBuffer(ab, "\x1b[K", 3);
   int len = strlen(E.message);
   if (len > E.cols) len = E.cols;
-  if (len && time(NULL) - E.time < 5) appendBuffer(ab, E.message, len);
+  if (len && time(NULL) - E.messageTime < 5) appendBuffer(ab, E.message, len);
 }
 
 // Refresh screen
@@ -868,7 +890,7 @@ void refreshScreen() {
   char buf[32];
   snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.cy - E.dy) + 1, (E.rx - E.dx) + 1);
   appendBuffer(&ab, buf, strlen(buf));
-  appendBuffer(&ab, "\x1b[?25h", 6);
+  appendBuffer(&ab, E.cursor ? "\x1b[?25h" : "\x1b[?25l", 6);
 
   write(STDOUT_FILENO, ab.b, ab.len);
   freeBuffer(&ab);
@@ -880,7 +902,7 @@ void setStatusMessage(const char* fmt, ...) {
   va_start(ap, fmt);
   vsnprintf(E.message, sizeof(E.message), fmt, ap);
   va_end(ap);
-  E.time = time(NULL);
+  E.messageTime = time(NULL);
 }
 
 //// Input ////
@@ -959,6 +981,7 @@ void moveCursor(int key) {
   row = (E.cy >= E.nrows) ? NULL : &E.row[E.cy];
   int len = row ? row->size : 0;
   if (E.cx > len) E.cx = len;
+  resetCursor();
 }
 
 // Process key
@@ -1066,7 +1089,7 @@ void setupEditor() {
   E.dirty = 0;
   E.insert = 0;
   E.message[0] = '\0';
-  E.time = 0;
+  E.messageTime = 0;
   E.syntax = NULL;
 
   if (getWindowSize(&E.rows, &E.cols) == -1) throw("getWindowSize");
