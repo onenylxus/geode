@@ -17,6 +17,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "lang/c.h"
+
 //// Defines ////
 
 #define VERSION "0.1.1"
@@ -103,20 +105,18 @@ struct abuf {
 
 //// Filetypes ////
 
-char* C_HL_extensions[] = { ".c", ".h", ".cpp", NULL };
-char* C_HL_keywords[] = {
-  "#include", "#pragma", "#define", "#undef", "#ifdef", "#ifndef", "#endif", "#error",
-  "switch", "if", "while", "for", "break", "continue", "return", "else", "struct", "union", "typedef", "static", "enum", "class", "case",
-  "int|", "long|", "double|", "float|", "char|", "unsigned|", "signed|", "void|", NULL
-};
-char* C_HL_operators[] = {
-  "+", "-", "*", "/", "%", "=", "<", ">", "!", "&", "|", "^", "~", NULL
-};
-
 struct syntax HLDB[] = {
-  { "c", C_HL_extensions, C_HL_keywords, C_HL_operators, "//", "/*", "*/", HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS },
+  {
+    "c",
+    HL_C_extensions,
+    HL_C_keywords,
+    HL_C_operators,
+    HL_C_slCommentStart,
+    HL_C_mlCommentStart,
+    HL_C_mlCommentEnd,
+    HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
+  }
 };
-
 #define HLDB_ENTRIES (sizeof(HLDB) / sizeof(HLDB[0]))
 
 //// Prototypes ////
