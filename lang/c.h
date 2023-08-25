@@ -1,8 +1,9 @@
+#pragma once
+
 // Extensions
 char* HL_C_extensions[] = {
   ".c",
   ".h",
-  ".cpp",
   NULL
 };
 
@@ -17,21 +18,29 @@ char* HL_C_keywords[] = {
   "#endif",
   "#error",
 
-  "switch",
-  "if",
-  "while",
-  "for",
+  "auto",
   "break",
-  "continue",
-  "return",
-  "else",
-  "struct",
-  "union",
-  "typedef",
-  "static",
-  "enum",
-  "class",
   "case",
+  "continue",
+  "default",
+  "do",
+  "else",
+  "enum",
+  "extern",
+  "for",
+  "goto",
+  "if",
+  "register",
+  "return",
+  "sizeof",
+  "static",
+  "struct",
+  "switch",
+  "typedef",
+  "union",
+  "volatile",
+  "while",
+  "NULL",
 
   "int|",
   "long|",
@@ -41,6 +50,9 @@ char* HL_C_keywords[] = {
   "unsigned|",
   "signed|",
   "void|",
+  "short|",
+  "auto|",
+  "const|",
   NULL
 };
 

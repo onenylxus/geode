@@ -18,6 +18,7 @@
 #include <unistd.h>
 
 #include "lang/c.h"
+#include "lang/cpp.h"
 
 //// Defines ////
 
@@ -114,6 +115,16 @@ struct syntax HLDB[] = {
     HL_C_slCommentStart,
     HL_C_mlCommentStart,
     HL_C_mlCommentEnd,
+    HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
+  },
+  {
+    "cpp",
+    HL_CPP_extensions,
+    HL_CPP_keywords,
+    HL_CPP_operators,
+    HL_CPP_slCommentStart,
+    HL_CPP_mlCommentStart,
+    HL_CPP_mlCommentEnd,
     HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
   }
 };
@@ -536,6 +547,8 @@ void rowDeleteCharacter(erow* row, int at) {
 }
 
 //// Editor ////
+
+// Insert character
 void insertCharacter(int c) {
   if (c == CTRL_KEY(c)) return;
   if (E.cy == E.nrows) insertRow(E.nrows, "", 0);
@@ -543,6 +556,7 @@ void insertCharacter(int c) {
   resetCursor();
 }
 
+// Insert line
 void insertLine() {
   if (E.cx == 0) {
     insertRow(E.cy, "", 0);
@@ -558,6 +572,7 @@ void insertLine() {
   E.cx = 0;
 }
 
+// Delete character
 void deleteCharacter() {
   if (E.cy == E.nrows) return;
   if (E.cx == 0 && E.cy == 0) return;
