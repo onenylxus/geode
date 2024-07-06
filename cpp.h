@@ -126,3 +126,15 @@ char* HL_CPP_operators[] = {
 #define HL_CPP_slCommentStart "//"
 #define HL_CPP_mlCommentStart "/*"
 #define HL_CPP_mlCommentEnd   "*/"
+
+// Database
+#define HLDB_CPP {\
+  "cpp",\
+  HL_CPP_extensions,\
+  HL_CPP_keywords,\
+  HL_CPP_operators,\
+  HL_CPP_slCommentStart,\
+  HL_CPP_mlCommentStart,\
+  HL_CPP_mlCommentEnd,\
+  HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS\
+}
