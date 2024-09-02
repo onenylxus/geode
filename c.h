@@ -1,4 +1,9 @@
+#ifndef C_H
+#define C_H
+
+#if defined(_MSC_VER) && (_MSC_VER > 1000)
 #pragma once
+#endif /* defined(_MSC_VER) && (_MSC_VER > 1000) */
 
 // Extensions
 char* HL_C_extensions[] = {
@@ -90,3 +95,5 @@ char* HL_C_operators[] = {
   HL_C_mlCommentEnd,\
   HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS\
 }
+
+#endif /* C_H */

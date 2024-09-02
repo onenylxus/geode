@@ -1,3 +1,10 @@
+#ifndef CPP_H
+#define CPP_H
+
+#if defined(_MSC_VER) && (_MSC_VER > 1000)
+#pragma once
+#endif /* defined(_MSC_VER) && (_MSC_VER > 1000) */
+
 #pragma once
 
 // Extensions
@@ -138,3 +145,5 @@ char* HL_CPP_operators[] = {
   HL_CPP_mlCommentEnd,\
   HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS\
 }
+
+#endif /* CPP_H */
